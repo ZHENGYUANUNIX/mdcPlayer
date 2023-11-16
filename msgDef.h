@@ -4,7 +4,7 @@
 
 class HString {
 public:
-    HString(const char*);
+    explicit HString(const char*);
     ~HString();
 
 public:
@@ -26,7 +26,7 @@ private:
 
 class HFile {
 public:
-    HFile(const char*);
+    explicit HFile(const char*);
     ~HFile();
 
 public:
@@ -44,14 +44,13 @@ private:
 
 class HDir {
 public:
-    HDir(const char*);
+    explicit HDir(const char*);
     ~HDir();
 
 public:
     bool isDir();
     bool isDeepest();
     bool exist();
-    bool mkpath();
     bool remove();
     const char* name();
     std::vector<std::string> & childDirAll();

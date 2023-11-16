@@ -1,12 +1,7 @@
 #include <iostream>
-#include <dirent.h>
-#include <sys/stat.h>
 #include <string>
 #include <thread>
-#include <vector>
 #include <unistd.h>
-#include <dirent.h>
-#include <string.h>
 #include <signal.h>
 #include "player.h"
 
@@ -31,6 +26,7 @@ static int printHelp(const char *ptrName)
               << "# 以#开始代表这行是注释\n"
               << "# 以START开始，则代表这行是上电状态要执行的命令，命令从上往下执行\n"
               << "# 以SLEEP开始，则代码这行是休眠状态要执行的命令，命令从上往下执行\n"
+              << "# 以SKIP开始，则代码这行是播包要忽略的Event名称\n"
               << "# START PLAYBAG，这条是播包的命令，不可以修改\n"
               << "\n"
               << "START echo 开始命令1\n"
@@ -43,10 +39,16 @@ static int printHelp(const char *ptrName)
               << "SLEEP echo 休眠命令2\n"
               << "SLEEP echo 休眠命令3\n"
               << "SLEEP echo 休眠命令4\n"
+              << "SLEEP echo 休眠命令4\n"
+              << "\n"
+              << "SKIP /Gac/Deploy/FusionMapService/FusionMap[/Gac/Deploy/DdsRequiredServiceInstance/FusionMapDdsProvidedServiceInstance1422]\n"
+              << "SKIP /Gac/Deploy/FusionObstacleService/FusionObstacle[/Gac/Deploy/DdsRequiredServiceInstance/FusionObstacleDdsProvidedServiceInstance1315]\n"
+              << "SKIP /Gac/Deploy/FusionTrafficSignService/FusionTrafficSign[/Gac/Deploy/DdsRequiredServiceInstance/FusionTrafficSignDdsProvidedServiceInstance1428]\n"
+              << "SKIP /Gac/Deploy/InternalService/InternalPerceptionObjectService/InternalPerceptionObject[/Gac/Deploy/DdsRequiredServiceInstance/InternalPerceptionObjectDdsProvidedServiceInstance1311]\n"
+              << "SKIP /Gac/Deploy/FusionTrafficSignService/FusionTrafficSign[/Gac/Deploy/DdsRequiredServiceInstance/FusionTrafficSignDdsProvidedServiceInstance1428]\n"
               << std::endl;
     return 0;
 }
-
 
 void signalHandle(int32_t)
 {
@@ -65,7 +67,7 @@ int main(int argc, char** argv)
     std::string strDir, strConf;
     signal(SIGINT, signalHandle);
     int nOpt = -1;
-    while ((nOpt = getopt(argc, argv, "hi:o:j:")) != -1) {
+    while ((nOpt = getopt(argc, argv, "hc:d:")) != -1) {
         switch (nOpt) {
             case 'h': {
                 return printHelp(strAppName.realName().c_str());

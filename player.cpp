@@ -35,7 +35,7 @@ bool Player::isWarkUp()
             fgets(buffer, sizeof(buffer), ptrFile);
             std::string strMsg(buffer);
             if (std::string::npos != strMsg.find("MachineState")) {
-                if (std::string::npos != strMsg.find("Startup") ) {
+                if (std::string::npos != strMsg.find("Startup")) {
                     bRet = true;
                     break;
                 }
@@ -44,10 +44,10 @@ bool Player::isWarkUp()
         pclose(ptrFile);
     }
     if (bRet) {
-        std::cout << "当前的处于休眠状态..." << std::endl;
+        std::cout << "当前处于上电状态..." << std::endl;
     }
     else {
-        std::cout << "当前处于上电状态..." << std::endl;
+        std::cout << "当前的处于休眠状态..." << std::endl;
     }
     return bRet;
 }
@@ -71,6 +71,7 @@ bool Player::readScript(const char *ptrFile)
     std::string strRead;
     m_vecRunScript.clear();
     m_vecStopScript.clear();
+    m_listSkipEvent.clear();
     if (stream) {
         if (stream.is_open()) {
             while (getline(stream, strRead)) {
@@ -83,6 +84,10 @@ bool Player::readScript(const char *ptrFile)
                     else if (stringRead.startWith("SLEEP")) {
                         stringRead.removeStart("SLEEP");
                         m_vecStopScript.push_back(stringRead.simplified());
+                    }
+                    else if (stringRead.startWith("SKIP")) {
+                        stringRead.removeStart("SKIP");
+                        m_listSkipEvent.push_back(stringRead.simplified());
                     }
                 }
                 strRead.clear();
@@ -136,22 +141,35 @@ void Player::listening()
             for (const auto &strScript : m_vecRunScript) {
                 HString strCmd(strScript.c_str());
                 if (strCmd.startWith("PLAYBAG")) {
-                    // 开始播包
                     std::cout << "开始播包, 第" << m_nCurrentIndex + 1 << "组"  << std::endl;
                     std::string strBagAll;
                     if (m_listBagDirMsg.size() > m_nCurrentIndex) {
                         HString strBagDir(m_listBagDirMsg[m_nCurrentIndex].strDirName.c_str());
                         if (strBagDir.isDir()) {
                             std::vector<std::string> listBags = strBagDir.listFiles(".bag");
+                            for (const auto& bagNameTest : listBags) {
+                                std::cout << "读到的文件名称" << bagNameTest << std::endl;
+                            }
                             if (listBags.empty()) {
                                 std::cout << "目录" << strBagDir.name() << "未读取到rtfbag文件，本地播包跳过" << std::endl;
                             }
                             else {
                                 std::string strBagsAll;
                                 for (const auto& strBag : listBags) {
-                                    strBagsAll = strBagsAll + " ";
+                                    strBagsAll.append(" ");
+                                    strBagsAll.append(strBag);
                                 }
                                 std::string strScriptPlay = "rtfbag play -l " + strBagsAll;
+                                if (!m_listSkipEvent.empty()) {
+                                    strScriptPlay += " --skip-events";
+                                    for (const auto& strSkip : m_listSkipEvent) {
+                                        strScriptPlay.append(" ");
+                                        strScriptPlay.append(strSkip);
+                                    }
+                                }
+
+                                strScriptPlay += " &";
+                                std::cout << "rtfbag 要执行的波" << strScriptPlay << std::endl;
                                 if (system(strScriptPlay.c_str())) {
                                     std::cout << strScriptPlay << "\t执行成功" << std::endl;
                                 }
@@ -191,6 +209,7 @@ bool Player::importBags(const char *ptrDir) {
     }
     std::vector<std::string> listDirs = dirRead.childDirAll();
     m_listBagDirMsg.clear();
+    std::cout << "读到的listbag" << std::endl;
     for (const auto& dir : listDirs) {
         HString strDir(dir.c_str());
         BagDirMsg bagDir;
@@ -224,6 +243,7 @@ void Player::doSort()
         if (strDir.isDir()) {
             std::vector<std::string> listBags = strDir.listFiles(".bag");
             if (!listBags.empty()) {
+                std::cout << "读取文件的时间戳数据, 文件名是" << listBags[0].c_str() << std::endl;
                 bagDir.nTimeStamp = getRtfTimeStamp(listBags[0].c_str());
             }
         }
@@ -235,7 +255,7 @@ void Player::doSort()
     }
 
     std::sort(m_listBagDirMsg.begin(), m_listBagDirMsg.end(), [&](const BagDirMsg& obj1, const BagDirMsg& obj2) -> bool {
-        return obj1.nTimeStamp > obj2.nTimeStamp;
+        return obj1.nTimeStamp < obj2.nTimeStamp;
     });
     std::cout << "排序后" << std::endl;
     nIndex = 1;
@@ -248,7 +268,9 @@ long long Player::getRtfTimeStamp(const char *ptrBag)
 {
     FILE *ptrFile = nullptr;
     char buffer[256] = {0};
-    ptrFile = popen(ptrBag, "r");
+    std::string strReadTimeScript("rtfbag info ");
+    strReadTimeScript += ptrBag;
+    ptrFile = popen(strReadTimeScript.c_str(), "r");
     bool bRet = false;
     if (ptrFile) {
         while (Player::s_bRunnable.load() && !feof(ptrFile)) {

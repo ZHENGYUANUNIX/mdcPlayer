@@ -14,7 +14,7 @@ struct BagDirMsg {
 class Player
 {
 public:
-    Player(const char* = "mdc-dbg sm query MachineState");
+    explicit Player(const char* = "mdc-dbg sm query MachineState");
     ~Player();
 
 public:
@@ -38,4 +38,5 @@ private:
     std::vector<std::string>        m_vecRunScript;
     std::vector<std::string>        m_vecStopScript;
     std::vector<BagDirMsg>          m_listBagDirMsg;
+    std::vector<std::string>        m_listSkipEvent;
 };

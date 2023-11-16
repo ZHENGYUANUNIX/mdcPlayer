@@ -1,4 +1,7 @@
- build
- cmake-build-debug
- *.user 
+build
+cmake-build-debug
+*.user 
 idea
+.idea/
+cmake-build-debug/
+mdcPlayer

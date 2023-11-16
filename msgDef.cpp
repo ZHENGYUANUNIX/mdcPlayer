@@ -1,4 +1,3 @@
-#include <iostream>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <vector>
@@ -6,7 +5,6 @@
 #include "msgDef.h"
 #include <cstdio>
 #include <algorithm>
-
 
 HFile::HFile(const char *ptrName) : m_strFile(ptrName)
 {
@@ -226,15 +224,17 @@ void HString::removeStart(const char *ptrStart)
     }
 }
 
-std::vector<std::string> HString::listFiles(const char *) {
+std::vector<std::string> HString::listFiles(const char* ptrFileSuffix)
+{
+    std::string strFileSuffix(ptrFileSuffix);
     std::vector<std::string> listBag;
     DIR* ptrDir = opendir(m_string.c_str());
     struct dirent * ptrEnt;
     while ((ptrEnt = readdir(ptrDir)) != nullptr) {
-        HString strFile(ptrEnt->d_name);
-        if (strFile.isFile()) {
+        HFile strFile(ptrEnt->d_name);
+        if (strFile.endWith(ptrFileSuffix)) {
             std::string strNameShort = strFile.name();
-            if (strNameShort.size() >= 4 && strNameShort.substr(strNameShort.size() - 4) == ".bag") {
+            if (strNameShort.size() >= strFileSuffix.size() && strNameShort.substr(strNameShort.size() - strFileSuffix.size()) == strFileSuffix) {
                 std::string strFullName = m_string + "/" + strNameShort;
                 HFile fileRtf(strFullName.c_str());
                 if (fileRtf.exist()) {
@@ -243,7 +243,7 @@ std::vector<std::string> HString::listFiles(const char *) {
                         std::string strHeader;
                         if (std::getline(streamRtf, strHeader)) {
                             HFile fileRtfOK(strHeader.c_str());
-                            if (fileRtfOK.contains("#RTFBAG")) {
+                            if (std::string::npos != strHeader.find("#RTFBAG")) {
                                 listBag.push_back(m_string + "/" + strNameShort);
                             }
                         }
@@ -253,6 +253,7 @@ std::vector<std::string> HString::listFiles(const char *) {
             }
         }
     }
+
     closedir(ptrDir);
     return listBag;
 }
