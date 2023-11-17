@@ -4,6 +4,7 @@
 #include <thread>
 #include <memory>
 #include <vector>
+#include <ctime>
 #include "msgDef.h"
 
 struct BagDirMsg {
@@ -21,13 +22,15 @@ public:
     bool startUp();
     bool readScript(const char*);
     bool importBags(const char*);
-private:
 
+private:
+    std::string getCurrentTime();
     void waiting();
     bool isWarkUp();
     void listening();
     void doSort();
     long long getRtfTimeStamp(const char*);
+
 
 public:
     static std::atomic_bool         s_bRunnable;

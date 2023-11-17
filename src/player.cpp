@@ -128,6 +128,25 @@ void Player::waiting()
     }
 }
 
+std::string Player::getCurrentTime()
+{
+    std::string strTime("当前系统时间");
+    std::time_t time = std::time(nullptr);
+    std::tm* timeLocal = std::localtime(&time);
+    strTime.append(std::to_string(timeLocal->tm_year + 1900));
+    strTime.append("-");
+    strTime.append(std::to_string(timeLocal->tm_mon + 1));
+    strTime.append("-");
+    strTime.append(std::to_string(timeLocal->tm_mday));
+    strTime.append(" ");
+    strTime.append(std::to_string(timeLocal->tm_hour));
+    strTime.append(":");
+    strTime.append(std::to_string(timeLocal->tm_min));
+    strTime.append(":");
+    strTime.append(std::to_string(timeLocal->tm_sec));
+    return strTime;
+}
+
 void Player::listening()
 {
     m_nCurrentIndex = 0;
@@ -169,9 +188,9 @@ void Player::listening()
                                 }
 
                                 strScriptPlay += " &";
-                                std::cout << "rtfbag 要执行的波" << strScriptPlay << std::endl;
+                                std::cout << getCurrentTime() << ", rtfbag 要执行的播包指令为: " << strScriptPlay << std::endl;
                                 if (system(strScriptPlay.c_str())) {
-                                    std::cout << strScriptPlay << "\t执行成功" << std::endl;
+                                    std::cout << getCurrentTime() << ", " << strScriptPlay << "\t执行成功" << std::endl;
                                 }
                             }
                         }
