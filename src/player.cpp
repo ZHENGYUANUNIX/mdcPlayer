@@ -187,7 +187,7 @@ void Player::listening()
                                     }
                                 }
 
-                                strScriptPlay += " &";
+                                strScriptPlay += " --adjust-clock &";
                                 std::cout << getCurrentTime() << ", rtfbag 要执行的播包指令为: " << strScriptPlay << std::endl;
                                 if (system(strScriptPlay.c_str())) {
                                     std::cout << getCurrentTime() << ", " << strScriptPlay << "\t执行成功" << std::endl;
